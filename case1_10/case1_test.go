@@ -22,7 +22,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 	"interview-cases/test"
-	"testing"
 	"time"
 )
 
@@ -143,8 +142,4 @@ type UserAfter struct {
 
 func (UserAfter) TableName() string {
 	return "users_after"
-}
-
-func TestCase1(t *testing.T) {
-	suite.Run(t, new(Case1TestSuite))
 }
