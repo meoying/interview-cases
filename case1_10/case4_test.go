@@ -26,15 +26,16 @@ func (s *Case4TestSuite) SetupSuite() {
 }
 
 func (s *Case4TestSuite) TearDownSuite() {
-	//err := s.db.Exec("TRUNCATE TABLE `orders`").Error
-	//require.NoError(s.T(), err)
-	//err = s.db.Exec("TRUNCATE TABLE `orders_v1`").Error
-	//require.NoError(s.T(), err)
+	// 如果你不希望测试结束就删除数据，你把这段代码注释掉
+	err := s.db.Exec("TRUNCATE TABLE `orders`").Error
+	require.NoError(s.T(), err)
+	err = s.db.Exec("TRUNCATE TABLE `orders_v1`").Error
+	require.NoError(s.T(), err)
 }
 
 func (s *Case4TestSuite) TestOrderByWithIndex() {
 	// 准备数据，你可以调整里面参数来控制数据量
-	//s.prepareData()
+	s.prepareData()
 	// 执行查询，为了方便你查看，我这里直接手写 SQL
 	start := time.Now()
 	// 查询买家为 11 的数据，模拟用户查询数据，并且翻页
