@@ -36,9 +36,9 @@ func (a *AsyncConsumer) Consume(ctx context.Context) {
 			}
 			msgs = append(msgs, msg)
 		}
-		// 批量消费
+		// 异步消费
 		var eg errgroup.Group
-		for i:= 0; i < BatchMaxSize; i++ {
+		for i := 0; i < BatchMaxSize; i++ {
 			eg.Go(func() error {
 				Test()
 				return nil
@@ -56,9 +56,8 @@ func (a *AsyncConsumer) Consume(ctx context.Context) {
 	}
 }
 
-
-func AsyncConsume(){
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+func AsyncConsume() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	consumer := NewAsyncConsumer("async_consume")
 	consumer.Consume(ctx)

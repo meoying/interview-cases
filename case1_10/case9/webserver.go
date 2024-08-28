@@ -7,12 +7,17 @@ import (
 	"net/http"
 	"strconv"
 	"sync/atomic"
-	"time"
 )
 
 func InitServer() {
 	r := gin.Default()
-	hdl := &TestHandler{}
+	db := InitDb()
+
+	hdl := &TestHandler{
+		db: &UserDAO{
+			db: db,
+		},
+	}
 	hdl.RegisterRouter(r)
 	r.Run(":8080")
 }
@@ -20,18 +25,19 @@ func InitServer() {
 // 模拟下游业务
 type TestHandler struct {
 	count int64
+	db *UserDAO
 }
 
 const BatchMaxSize = 5
 
 func (t *TestHandler) RegisterRouter(server *gin.Engine) {
 	server.GET("/test", func(c *gin.Context) {
-		time.Sleep(100 * time.Millisecond)
+		t.db.Insert(1)
 		atomic.AddInt64(&t.count, 1)
 	})
 
 	server.GET("/batch-test", func(c *gin.Context) {
-		time.Sleep(250 * time.Millisecond)
+		t.db.Insert(BatchMaxSize)
 		atomic.AddInt64(&t.count, BatchMaxSize)
 	})
 	server.GET("/count", func(c *gin.Context) {
@@ -40,8 +46,10 @@ func (t *TestHandler) RegisterRouter(server *gin.Engine) {
 	server.GET("/clear", func(c *gin.Context) {
 		atomic.StoreInt64(&t.count, 0)
 	})
-
 }
+
+
+
 
 func BatchTest() {
 	getResp("http://localhost:8080/batch-test")

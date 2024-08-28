@@ -43,7 +43,6 @@ func NewTestProducer() *TestProducer {
 func Produce() {
 	producer := NewTestProducer()
 	for {
-		time.Sleep(1*time.Millisecond)
 		producer.Produce(context.Background())
 	}
 }

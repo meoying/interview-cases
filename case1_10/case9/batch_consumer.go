@@ -46,7 +46,7 @@ func (c *BatchConsumer) Consume(ctx context.Context) {
 }
 
 func BatchConsume() {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	consumer := NewBatchConsumer("batch_consume")
 	consumer.Consume(ctx)
