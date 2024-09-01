@@ -29,7 +29,7 @@ func (a *AsyncConsumer) Consume(ctx context.Context) {
 			slog.Error("退出消费循环", slog.Any("err", ctx.Err()))
 			return
 		}
-		err := a.batchConsume(ctx)
+		err := a.batchAsyncConsume(ctx)
 		if err != nil {
 			slog.Error("消费失败", slog.Any("err", err))
 		}
@@ -37,7 +37,7 @@ func (a *AsyncConsumer) Consume(ctx context.Context) {
 }
 
 // 消费一批
-func (a *AsyncConsumer) batchConsume(ctx context.Context) error {
+func (a *AsyncConsumer) batchAsyncConsume(ctx context.Context) error {
 	var lastMsg kafkago.Message
 	// 异步消费
 	var eg errgroup.Group

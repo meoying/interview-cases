@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package case8
+package case9
 
 import (
 	"context"
@@ -26,13 +26,13 @@ import (
 	"time"
 )
 
-type Case8TestSuite struct {
+type Case9TestSuite struct {
 	suite.Suite
 	brokers []string
 	topic   string
 }
 
-func (s *Case8TestSuite) SetupSuite() {
+func (s *Case9TestSuite) SetupSuite() {
 	// 在这里启动了生产者
 	producer := &kafkago.Writer{
 		Addr:     kafkago.TCP(s.brokers...),
@@ -54,7 +54,7 @@ func (s *Case8TestSuite) SetupSuite() {
 	for i := 0; i < 100; i++ {
 		id := now + int64(i)
 		name, _ := randx.RandCode(8, randx.TypeMixed)
-		user := UserCase8{
+		user := UserCase9{
 			ID:        id,
 			Name:      name,
 			Email:     fmt.Sprintf("%d@qq.com", id),
@@ -71,7 +71,7 @@ func (s *Case8TestSuite) SetupSuite() {
 	assert.NoError(s.T(), err)
 }
 
-func (s *Case8TestSuite) TestAsyncConsume() {
+func (s *Case9TestSuite) TestBatchConsume() {
 	reader := kafkago.NewReader(kafkago.ReaderConfig{
 		Brokers: s.brokers,
 		Topic:   s.topic,
@@ -81,19 +81,19 @@ func (s *Case8TestSuite) TestAsyncConsume() {
 	const batchSize = 10
 	s.T().Log("开始消费")
 	// 这边你可以换成 SyncConsumer 试试挨个消费的效果
-	consumer := NewAsyncConsumer(reader, batchSize)
+	consumer := NewBatchConsumer(reader, batchSize)
 	// 十秒之后就会退出消费。正常在生产环境是不会用 WithTimeout，而是 WithCancel
 	// 而后在应用退出的时候 cancel 掉
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	consumer.Consume(ctx)
 	s.T().Log("结束消费")
 }
 
-func TestAsyncConsumer(t *testing.T) {
-	suite.Run(t, &Case8TestSuite{
+func TestBatchConsumer(t *testing.T) {
+	suite.Run(t, &Case9TestSuite{
 		// 记得换你的 Kafka 地址
 		brokers: []string{"localhost:9092"},
-		topic:   "case8_user",
+		topic:   "case9_user",
 	})
 }
