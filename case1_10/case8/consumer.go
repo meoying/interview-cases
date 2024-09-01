@@ -1,4 +1,4 @@
-package case9
+package case8
 
 import (
 	"bytes"
@@ -43,7 +43,7 @@ func (a *SyncConsumer) doBiz(msg kafkago.Message) error {
 	// 也可能就是自己执行业务逻辑，例如插入数据库
 	// 这里我们假设是发起 http 请求
 	resp, err := http.Post(
-		"http://localhost:8080/single", "application/json", bytes.NewBuffer(msg.Value))
+		"http://localhost:8080/handle", "application/json", bytes.NewBuffer(msg.Value))
 	if err != nil {
 		return err
 	}
