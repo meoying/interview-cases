@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/ecodeclub/ekit v0.0.9
 	github.com/gin-gonic/gin v1.10.0
+	github.com/pkg/errors v0.9.1
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.4.0
