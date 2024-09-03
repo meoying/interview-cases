@@ -10,7 +10,10 @@ import (
 	"time"
 )
 
-const delayConsumerGroupName = "delayConsumerGroup"
+const (
+	delayConsumerGroupName = "delayConsumerGroup"
+	defaultPollInterval    = 1 * time.Second
+)
 
 type DelayConsumer struct {
 	consumer *kafka.Consumer
@@ -29,10 +32,9 @@ type DelayMsg struct {
 
 func NewDelayConsumer(addr string, topicMap *syncx.Map[string, *kafka.Producer], partitionMap *syncx.Map[int, time.Duration]) (*DelayConsumer, error) {
 	config := &kafka.ConfigMap{
-		"bootstrap.servers": addr,
-		"group.id":          delayConsumerGroupName,
-		"auto.offset.reset": "earliest",
-		"max.poll.interval.ms": "60000",
+		"bootstrap.servers":  addr,
+		"group.id":           delayConsumerGroupName,
+		"auto.offset.reset":  "earliest",
 		"enable.auto.commit": "false",
 	}
 	consumer, err := kafka.NewConsumer(config)
@@ -88,8 +90,7 @@ func (d *DelayConsumer) consume(msg *kafka.Message) error {
 			return fmt.Errorf("暂停分区失败 %v", err)
 		}
 		// 睡眠
-		timer := time.NewTimer(subTime)
-		<-timer.C
+		d.sleep(subTime)
 		// 恢复分区消费
 		err = d.consumer.Resume([]kafka.TopicPartition{msg.TopicPartition})
 		if err != nil {
@@ -106,6 +107,21 @@ func (d *DelayConsumer) consume(msg *kafka.Message) error {
 		return fmt.Errorf("提交消息失败 offset %d Topic %s, 原因 %w", msg.TopicPartition.Offset, delayTopic, err)
 	}
 	return nil
+}
+
+func (d *DelayConsumer) sleep(subTime time.Duration) {
+	ticker := time.NewTicker(defaultPollInterval)
+	defer ticker.Stop()
+	timer := time.NewTimer(subTime)
+	defer timer.Stop()
+	for {
+		select {
+		case <-timer.C:
+			return
+		case <-ticker.C:
+			d.consumer.Poll(100)
+		}
+	}
 }
 
 func (d *DelayConsumer) sendMsg(msg *kafka.Message) error {
@@ -129,6 +145,3 @@ func (d *DelayConsumer) sendMsg(msg *kafka.Message) error {
 	}
 	return nil
 }
-
-
-

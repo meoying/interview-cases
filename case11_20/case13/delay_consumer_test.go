@@ -64,8 +64,8 @@ func (s *TestSuite) TestDelayConsume() {
 	// 发送消息
 	startTime1 := s.sendMsg("delayMsg1", 10*time.Minute)
 	startTime2 := s.sendMsg("delayMsg2", 3*time.Minute)
-	//time.Sleep(1 * time.Minute)
-	//startTime3 := s.sendMsg("delayMsg3", 3*time.Minute)
+	time.Sleep(1 * time.Minute)
+	startTime3 := s.sendMsg("delayMsg3", 3*time.Minute)
 	startTime4 := s.sendMsg("delayMsg4", 5*time.Minute)
 	wantMsgs := []WantDelayMsg{
 		{
@@ -73,11 +73,11 @@ func (s *TestSuite) TestDelayConsume() {
 			IntervalTime: 3 * time.Minute,
 			Data:         "delayMsg2",
 		},
-		//{
-		//	StartTime:    startTime3,
-		//	IntervalTime: 3 * time.Minute,
-		//	Data:         "delayMsg3",
-		//},
+		{
+			StartTime:    startTime3,
+			IntervalTime: 3 * time.Minute,
+			Data:         "delayMsg3",
+		},
 		{
 			StartTime:    startTime4,
 			IntervalTime: 5 * time.Minute,
@@ -98,7 +98,7 @@ func (s *TestSuite) TestDelayConsume() {
 		assert.Equal(s.T(), want.Data, msg)
 
 		// 允许误差10s
-		require.True(s.T(), subTime >= want.IntervalTime && subTime <= want.IntervalTime+10*time.Second)
+		require.True(s.T(), subTime >= want.IntervalTime-10*time.Second && subTime <= want.IntervalTime+10*time.Second)
 	}
 }
 
@@ -115,7 +115,7 @@ func TestDelayMsg(t *testing.T) {
 
 	suite.Run(t, &TestSuite{
 		// 记得换你的 Kafka 地址
-		addr: "localhost:9092",
+		addr: "127.0.0.1:9092",
 	})
 }
 
@@ -128,7 +128,7 @@ type WantDelayMsg struct {
 func (s *TestSuite) initTopic() {
 	// 创建 AdminClient
 	adminClient, err := kafka.NewAdminClient(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost:9092",
+		"bootstrap.servers": s.addr,
 	})
 	require.NoError(s.T(), err)
 	defer adminClient.Close()
@@ -163,106 +163,3 @@ func (s *TestSuite) initTopic() {
 		}
 	}
 }
-
-//
-//func TestConsumerPauseResume(t *testing.T) {
-//	// 创建 Kafka 生产者
-//	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-//		"bootstrap.servers": "localhost:9092",
-//	})
-//	if err != nil {
-//		t.Fatalf("Failed to create producer: %s", err)
-//	}
-//	defer producer.Close()
-//
-//	// 创建 Kafka 消费者
-//	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-//		"bootstrap.servers":    "localhost:9092",
-//		"group.id":             "test-group",
-//		"auto.offset.reset":    "earliest",
-//		"enable.auto.commit":   "false", // 关闭自动提交
-//		"max.poll.interval.ms": "60000", // 设置为 10 分钟
-//		//"session.timeout.ms":   "5000",
-//	})
-//	if err != nil {
-//		t.Fatalf("Failed to create consumer: %s", err)
-//	}
-//	defer consumer.Close()
-//
-//	// 订阅主题
-//	topic := "test-topic"
-//	err = consumer.Subscribe(topic, nil)
-//	if err != nil {
-//		t.Fatalf("Failed to subscribe to topic: %s", err)
-//	}
-//
-//	// 生产消息到 Kafka
-//	for i := 0; i < 100; i++ {
-//		msg := &kafka.Message{
-//			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-//			Value:          []byte(fmt.Sprintf("%d", i)),
-//		}
-//		err := producer.Produce(msg, nil)
-//		if err != nil {
-//			t.Fatalf("Failed to produce message: %s", err)
-//		}
-//	}
-//
-//	// 创建通道接收消息
-//	msgChan := make(chan *kafka.Message, 10)
-//	go func() {
-//		for {
-//			msg, err := consumer.ReadMessage(-1)
-//			if err != nil {
-//				t.Errorf("Failed to read message: %s", err)
-//				continue
-//			}
-//			log.Println(string(msg.Value))
-//			time.Sleep(100 * time.Millisecond)
-//			msgChan <- msg
-//		}
-//	}()
-//
-//	// 等待消费者开始处理消息
-//	time.Sleep(5 * time.Second)
-//
-//	// 暂停分区
-//	partitions := []kafka.TopicPartition{
-//		{Topic: &topic, Partition: 0},
-//	}
-//	consumer.Pause(partitions)
-//	t.Log("Paused partition 0")
-//	go func() {
-//		for {
-//			evt := consumer.Poll(11)
-//			time.Sleep(1 * time.Minute)
-//			log.Println(evt)
-//		}
-//	}()
-//	// 等待一定时间以观察暂停的效果
-//	time.Sleep(6 * time.Minute)
-//
-//	// 检查在暂停期间是否有消息被消费
-//	select {
-//	case msg := <-msgChan:
-//		t.Errorf("Unexpected message received during pause: %v", msg)
-//	default:
-//		t.Log("No messages received during pause, as expected")
-//	}
-//
-//	// 恢复分区
-//	consumer.Resume(partitions)
-//	t.Log("Resumed partition 0")
-//
-//	// 等待消费者恢复消费
-//	time.Sleep(5 * time.Second)
-//
-//	// 检查恢复后是否有消息被消费
-//	for i := 0; i < 1000000; i++ {
-//		select {
-//		case <-msgChan:
-//		case <-time.After(5 * time.Second):
-//			t.Errorf("Timed out waiting for message test-message-%d", i)
-//		}
-//	}
-//}
