@@ -3,8 +3,10 @@ module interview-cases
 go 1.22.0
 
 require (
+	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/ecodeclub/ekit v0.0.9
 	github.com/gin-gonic/gin v1.10.0
+	github.com/pkg/errors v0.9.1
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.4.0
@@ -30,7 +32,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
