@@ -8,7 +8,8 @@ package pb
 
 import (
 	context "context"
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
+
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 )
@@ -16,7 +17,7 @@ import (
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
 // Requires gRPC-Go v1.64.0 or later.
-const _ = grpc.SupportPackageIsVersion9
+//const _ = grpc.SupportPackageIsVersion9
 
 const (
 	ArticleService_ListArticles_FullMethodName = "/proto.ArticleService/ListArticles"
@@ -41,7 +42,7 @@ func NewArticleServiceClient(cc grpc.ClientConnInterface) ArticleServiceClient {
 }
 
 func (c *articleServiceClient) ListArticles(ctx context.Context, in *ListArticlesRequest, opts ...grpc.CallOption) (*ListArticlesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	cOpts := append([]grpc.CallOption{}, opts...)
 	out := new(ListArticlesResponse)
 	err := c.cc.Invoke(ctx, ArticleService_ListArticles_FullMethodName, in, out, cOpts...)
 	if err != nil {

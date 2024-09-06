@@ -1,4 +1,4 @@
-package ratelimiter
+package interceptor
 
 import (
 	"sync"

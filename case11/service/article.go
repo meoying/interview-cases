@@ -3,15 +3,21 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"interview-cases/case11/pb"
-	"interview-cases/case11/repo"
-	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 )
+
+type Article struct {
+	ID      int32
+	Title   string
+	Author  string
+	Content string
+}
 
 type ArticleService struct {
 	pb.UnimplementedArticleServiceServer
@@ -24,14 +30,28 @@ func NewArticleService(client redis.Cmdable, DB *gorm.DB) *ArticleService {
 }
 
 func (s *ArticleService) ListArticles(ctx context.Context, req *pb.ListArticlesRequest) (*pb.ListArticlesResponse, error) {
+	// 不管有没有限流，redis都是必须查询的
 	key := "article:" + req.Author
+
+	resp, err := s.getArticleListFromRedis(ctx, key)
+	if err == nil {
+		return resp, nil
+	}
 
 	// 请求被限流
 	if rateLimited, ok := ctx.Value("RateLimited").(bool); ok && rateLimited {
-		log.Println("请求限流，只允许从redis进行查询")
-		return s.getArticleListFromRedis(ctx, key)
+
+		// 其实这个地方可以选择直接返回上次的查询记录，例如增加一个bool值来判断是否已经查过redis 如果上面没查出来这里直接返回nil
+		// 不过我觉得多查一次redis无所谓
+		resp, err := s.getArticleListFromRedis(ctx, key)
+		if errors.Is(err, redis.Nil) {
+			return nil, errors.New("数据不存在redis")
+		}
+		if err != nil {
+			return nil, errors.New("redis 查询失败")
+		}
+		return resp, nil
 	} else {
-		log.Println("请求没有限流，可以访问Mysql进行查询")
 		resp, err := s.getArticleListFromRedis(ctx, key)
 		if err == nil {
 			return resp, nil
@@ -77,8 +97,8 @@ func (s *ArticleService) setArticleListToRedis(ctx context.Context, key string, 
 func (s *ArticleService) getArticleListFromMySQL(ctx context.Context, author string) (*pb.ListArticlesResponse, error) {
 	// 从 MySQL 获取文章列表
 	// 假设这里返回了一个空的响应
-	var articles []repo.Article
-	err := s.DB.WithContext(ctx).Model(repo.Article{}).Where("author = ?", author).Find(&articles).Error
+	var articles []Article
+	err := s.DB.WithContext(ctx).Model(Article{}).Where("author = ?", author).Find(&articles).Error
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +108,7 @@ func (s *ArticleService) getArticleListFromMySQL(ctx context.Context, author str
 	}, nil
 }
 
-func toProto(articles []repo.Article) []*pb.Article {
+func toProto(articles []Article) []*pb.Article {
 	pa := make([]*pb.Article, 0, len(articles))
 	for _, v := range articles {
 		pba := &pb.Article{
