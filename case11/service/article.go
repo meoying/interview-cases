@@ -32,7 +32,6 @@ func NewArticleService(client redis.Cmdable, DB *gorm.DB) *ArticleService {
 func (s *ArticleService) ListArticles(ctx context.Context, req *pb.ListArticlesRequest) (*pb.ListArticlesResponse, error) {
 	// 不管有没有限流，redis都是必须查询的
 	key := "article:" + req.Author
-
 	resp, err := s.getArticleListFromRedis(ctx, key)
 	if err == nil {
 		return resp, nil
@@ -40,33 +39,15 @@ func (s *ArticleService) ListArticles(ctx context.Context, req *pb.ListArticlesR
 
 	// 请求被限流
 	if rateLimited, ok := ctx.Value("RateLimited").(bool); ok && rateLimited {
-
-		// 其实这个地方可以选择直接返回上次的查询记录，例如增加一个bool值来判断是否已经查过redis 如果上面没查出来这里直接返回nil
-		// 不过我觉得多查一次redis无所谓
-		resp, err := s.getArticleListFromRedis(ctx, key)
-		if errors.Is(err, redis.Nil) {
-			return nil, errors.New("数据不存在redis")
-		}
-		if err != nil {
-			return nil, errors.New("redis 查询失败")
-		}
-		return resp, nil
-	} else {
-		resp, err := s.getArticleListFromRedis(ctx, key)
-		if err == nil {
-			return resp, nil
-		}
-
-		// Redis 中没有数据，访问 MySQL
-		resp, err = s.getArticleListFromMySQL(ctx, req.Author)
-
-		if err == nil {
-			// 回写redis
-			s.setArticleListToRedis(ctx, key, resp.Articles)
-		}
-
-		return resp, err
+		return nil, errors.New("数据不存在redis")
 	}
+
+	resp, err = s.getArticleListFromMySQL(ctx, req.Author)
+	if err == nil {
+		// 回写redis
+		s.setArticleListToRedis(ctx, key, resp.Articles)
+	}
+	return resp, err
 
 }
 
