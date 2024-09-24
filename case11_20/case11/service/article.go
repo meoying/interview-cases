@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"interview-cases/case11/pb"
+	pb2 "interview-cases/case11_20/case11/pb"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 )
@@ -20,7 +19,7 @@ type Article struct {
 }
 
 type ArticleService struct {
-	pb.UnimplementedArticleServiceServer
+	pb2.UnimplementedArticleServiceServer
 	Client redis.Cmdable
 	DB     *gorm.DB
 }
@@ -29,7 +28,7 @@ func NewArticleService(client redis.Cmdable, DB *gorm.DB) *ArticleService {
 	return &ArticleService{Client: client, DB: DB}
 }
 
-func (s *ArticleService) ListArticles(ctx context.Context, req *pb.ListArticlesRequest) (*pb.ListArticlesResponse, error) {
+func (s *ArticleService) ListArticles(ctx context.Context, req *pb2.ListArticlesRequest) (*pb2.ListArticlesResponse, error) {
 	// 不管有没有限流，redis都是必须查询的
 	key := "article:" + req.Author
 	resp, err := s.getArticleListFromRedis(ctx, key)
@@ -51,31 +50,31 @@ func (s *ArticleService) ListArticles(ctx context.Context, req *pb.ListArticlesR
 
 }
 
-func (s *ArticleService) getArticleListFromRedis(ctx context.Context, key string) (*pb.ListArticlesResponse, error) {
+func (s *ArticleService) getArticleListFromRedis(ctx context.Context, key string) (*pb2.ListArticlesResponse, error) {
 	// 从 Redis 获取文章列表
 	res, err := s.Client.Get(ctx, key).Bytes()
 	if err != nil {
 		return nil, err
 	}
-	var articles []*pb.Article
+	var articles []*pb2.Article
 	er := json.Unmarshal(res, &articles)
 
 	if er != nil {
 		return nil, er
 	}
 
-	return &pb.ListArticlesResponse{
+	return &pb2.ListArticlesResponse{
 		Articles: articles,
 	}, nil
 }
 
-func (s *ArticleService) setArticleListToRedis(ctx context.Context, key string, val []*pb.Article) error {
+func (s *ArticleService) setArticleListToRedis(ctx context.Context, key string, val []*pb2.Article) error {
 	value, _ := json.Marshal(val)
 	return s.Client.Set(ctx, key, value, time.Minute*10).Err()
 
 }
 
-func (s *ArticleService) getArticleListFromMySQL(ctx context.Context, author string) (*pb.ListArticlesResponse, error) {
+func (s *ArticleService) getArticleListFromMySQL(ctx context.Context, author string) (*pb2.ListArticlesResponse, error) {
 	// 从 MySQL 获取文章列表
 	// 假设这里返回了一个空的响应
 	var articles []Article
@@ -84,15 +83,15 @@ func (s *ArticleService) getArticleListFromMySQL(ctx context.Context, author str
 		return nil, err
 	}
 
-	return &pb.ListArticlesResponse{
+	return &pb2.ListArticlesResponse{
 		Articles: toProto(articles),
 	}, nil
 }
 
-func toProto(articles []Article) []*pb.Article {
-	pa := make([]*pb.Article, 0, len(articles))
+func toProto(articles []Article) []*pb2.Article {
+	pa := make([]*pb2.Article, 0, len(articles))
 	for _, v := range articles {
-		pba := &pb.Article{
+		pba := &pb2.Article{
 			Id:      v.ID,
 			Title:   v.Title,
 			Author:  v.Author,
@@ -106,5 +105,5 @@ func toProto(articles []Article) []*pb.Article {
 }
 
 func RegisterArticleServiceServer(s *grpc.Server, svc *ArticleService) {
-	pb.RegisterArticleServiceServer(s, svc)
+	pb2.RegisterArticleServiceServer(s, svc)
 }

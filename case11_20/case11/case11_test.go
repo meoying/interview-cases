@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"interview-cases/case11/interceptor"
-	"interview-cases/case11/pb"
-	"interview-cases/case11/service"
+	interceptor2 "interview-cases/case11_20/case11/interceptor"
+	pb2 "interview-cases/case11_20/case11/pb"
+	"interview-cases/case11_20/case11/service"
 	"interview-cases/test"
 	"log"
 	"net"
@@ -24,10 +24,10 @@ func TestCase11_(t *testing.T) {
 	db := test.InitDB()
 	client := test.InitRedis()
 	svc := service.NewArticleService(client, db)
-	tokenBucket := interceptor.NewTokenBucket(5, 0) // 最大容量为 5，每秒产生 0 个令牌，方便测试限流
+	tokenBucket := interceptor2.NewTokenBucket(5, 0) // 最大容量为 5，每秒产生 0 个令牌，方便测试限流
 	// 初始化grpc服务端,注册拦截器
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(interceptor.UnaryServerInterceptor(tokenBucket)),
+		grpc.UnaryInterceptor(interceptor2.UnaryServerInterceptor(tokenBucket)),
 	)
 
 	go func() {
@@ -58,20 +58,20 @@ func TestCase11_(t *testing.T) {
 		log.Fatalf("did not connect: %v", err)
 	}
 
-	grpcClient := pb.NewArticleServiceClient(conn)
+	grpcClient := pb2.NewArticleServiceClient(conn)
 
 	testCases := []struct {
 		name    string
-		req     func() *pb.ListArticlesRequest
+		req     func() *pb2.ListArticlesRequest
 		before  func()
 		after   func()
-		wantRes *pb.ListArticlesResponse
+		wantRes *pb2.ListArticlesResponse
 		wantErr error
 	}{
 		{
 			name: "没有限流,执行先查询redis,没有数据查询到mysql",
-			req: func() *pb.ListArticlesRequest {
-				return &pb.ListArticlesRequest{Author: "mysql"}
+			req: func() *pb2.ListArticlesRequest {
+				return &pb2.ListArticlesRequest{Author: "mysql"}
 			},
 			before: func() {
 				// 先检测令牌桶是否还有令牌
@@ -102,9 +102,9 @@ func TestCase11_(t *testing.T) {
 				err := db.Exec("TRUNCATE TABLE `articles`").Error
 				assert.NoError(t, err)
 			},
-			wantRes: &pb.ListArticlesResponse{
-				Articles: []*pb.Article{
-					&pb.Article{
+			wantRes: &pb2.ListArticlesResponse{
+				Articles: []*pb2.Article{
+					&pb2.Article{
 						Id:      1,
 						Title:   "mysql",
 						Author:  "mysql",
@@ -116,8 +116,8 @@ func TestCase11_(t *testing.T) {
 		},
 		{
 			name: "没有限流,执行先查询redis,并且数据从redis返回成功",
-			req: func() *pb.ListArticlesRequest {
-				return &pb.ListArticlesRequest{Author: "redis"}
+			req: func() *pb2.ListArticlesRequest {
+				return &pb2.ListArticlesRequest{Author: "redis"}
 			},
 			before: func() {
 				// 先检测令牌桶是否还有令牌
@@ -129,8 +129,8 @@ func TestCase11_(t *testing.T) {
 
 				// 先给redis预加载数据
 				key := "article:redis"
-				list := []*pb.Article{
-					&pb.Article{
+				list := []*pb2.Article{
+					&pb2.Article{
 						Id:      1,
 						Title:   "redis",
 						Author:  "redis",
@@ -148,9 +148,9 @@ func TestCase11_(t *testing.T) {
 				err := client.Del(context.Background(), key).Err()
 				assert.NoError(t, err)
 			},
-			wantRes: &pb.ListArticlesResponse{
-				Articles: []*pb.Article{
-					&pb.Article{
+			wantRes: &pb2.ListArticlesResponse{
+				Articles: []*pb2.Article{
+					&pb2.Article{
 						Id:      1,
 						Title:   "redis",
 						Author:  "redis",
@@ -163,8 +163,8 @@ func TestCase11_(t *testing.T) {
 		},
 		{
 			name: "限流,只查询redis,并且数据从redis返回成功",
-			req: func() *pb.ListArticlesRequest {
-				return &pb.ListArticlesRequest{Author: "redis"}
+			req: func() *pb2.ListArticlesRequest {
+				return &pb2.ListArticlesRequest{Author: "redis"}
 			},
 			before: func() {
 				// 先消耗掉令牌，模拟限流环境
@@ -175,8 +175,8 @@ func TestCase11_(t *testing.T) {
 
 				// 先给redis预加载数据
 				key := "article:redis"
-				list := []*pb.Article{
-					&pb.Article{
+				list := []*pb2.Article{
+					&pb2.Article{
 						Id:      1,
 						Title:   "redis",
 						Author:  "redis",
@@ -194,9 +194,9 @@ func TestCase11_(t *testing.T) {
 				err := client.Del(context.Background(), key).Err()
 				assert.NoError(t, err)
 			},
-			wantRes: &pb.ListArticlesResponse{
-				Articles: []*pb.Article{
-					&pb.Article{
+			wantRes: &pb2.ListArticlesResponse{
+				Articles: []*pb2.Article{
+					&pb2.Article{
 						Id:      1,
 						Title:   "redis",
 						Author:  "redis",
@@ -209,8 +209,8 @@ func TestCase11_(t *testing.T) {
 		},
 		{
 			name: "限流,只查询redis,并且redis数据不存在，返回nil",
-			req: func() *pb.ListArticlesRequest {
-				return &pb.ListArticlesRequest{Author: "redis"}
+			req: func() *pb2.ListArticlesRequest {
+				return &pb2.ListArticlesRequest{Author: "redis"}
 			},
 			before: func() {
 				// 先消耗掉令牌，模拟限流环境
