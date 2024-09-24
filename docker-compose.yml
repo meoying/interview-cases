@@ -27,3 +27,11 @@ services:
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     networks:
       default:
+  redis:
+    image: 'redis:7.2.4-alpine'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+    networks:
+      default:
