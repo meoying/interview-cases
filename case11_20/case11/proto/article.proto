@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "../pb;pb";  // 指定生成的 Go 包路径
+
+package proto;
+
+// 定义一个用于管理文章的服务
+service ArticleService {
+  // ListArticles 方法用于获取文章列表
+  rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse);
+}
+
+// 定义请求消息 不考虑分页等情况，简单化
+message ListArticlesRequest {
+  string author = 1;
+}
+
+// 定义响应消息
+message Article {
+  int32 id = 1;
+  string title = 2;
+  string author = 3;
+  string content = 4;
+}
+
+message ListArticlesResponse {
+  repeated Article articles = 1;
+}
