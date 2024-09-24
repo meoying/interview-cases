@@ -47,4 +47,17 @@ func TestLimiter_Allow(t *testing.T) {
 	ok, err = limiter.Allow(ctx)
 	require.NoError(t, err)
 	assert.False(t, ok)
+
+	// 测试删除时间窗口之外的请求
+	// 窗口是一分钟的，所以我们准备一个一分钟之前的请求
+	expireReq := time.Now().UnixMilli() - time.Minute.Milliseconds() - time.Second.Milliseconds()
+	// 先把刚才第一个请求删了
+	rdb.LPop(ctx, key)
+	// 把这个过期请求放回去，模拟
+	rdb.LPush(ctx, key, expireReq)
+
+	// 经过淘汰，这个请求会被允许
+	ok, err = limiter.Allow(ctx)
+	require.NoError(t, err)
+	assert.True(t, ok)
 }
