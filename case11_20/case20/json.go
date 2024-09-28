@@ -1,4 +1,4 @@
-package case18
+package case20
 
 import (
 	"context"
@@ -52,9 +52,9 @@ func (j *JsonRedis) MyBusiness() (string, error) {
 // 优化成map获取
 
 func (j *JsonRedis) MyBusinessV1() (string, error) {
-	res,err := j.client.HMGet(context.Background(), "myBusinessV1", "product_2_graphics").Result()
+	res, err := j.client.HMGet(context.Background(), "myBusinessV1", "product_2_graphics").Result()
 	if err != nil {
-		return "",err
+		return "", err
 	}
-	return res[0].(string),nil
+	return res[0].(string), nil
 }
