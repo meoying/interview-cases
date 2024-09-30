@@ -46,9 +46,10 @@ func (t *TestSuite) TestRank() {
 	t.checkCacheData()
 	// 再等一分钟等待redis中的数据是否同步到本地缓存
 	time.Sleep(1*time.Minute + 10*time.Second)
+	// 获取本地缓存中的数据
 	items, err = t.svc.TopN(context.Background())
 	require.NoError(t.T(), err)
-	// 查看本地缓存中的数据
+	// 校验本地缓存中的数据
 	t.checkItems(items, t.getData(900, 999))
 }
 

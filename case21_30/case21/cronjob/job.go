@@ -13,12 +13,14 @@ import (
 type ToRedisJob struct {
 	redisCache *redis.Cache
 	triSvc     TriSvc
+	syncToRedisCount int
 }
 
-func NewDBToRedisJob(redisCache *redis.Cache, triSvc TriSvc) *ToRedisJob {
+func NewDBToRedisJob(redisCache *redis.Cache, triSvc TriSvc,syncToRedisCount int) *ToRedisJob {
 	return &ToRedisJob{
 		redisCache: redisCache,
 		triSvc:     triSvc,
+		syncToRedisCount: syncToRedisCount,
 	}
 }
 
@@ -26,7 +28,7 @@ func (d *ToRedisJob) Run() {
 	// 从db取出1000条数据
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	items, err := d.triSvc.TopN(ctx, 1000)
+	items, err := d.triSvc.TopN(ctx, d.syncToRedisCount)
 	if err != nil {
 		// 记录一下错误日志
 		slog.Error("从全局获取获取数据失败", slog.Any("err", err))
@@ -45,12 +47,15 @@ func (d *ToRedisJob) Run() {
 type RedisToLocalJob struct {
 	redisCache *redis.Cache
 	localCache *local.Cache
+	// 从redis同步进本地缓存的个数，可以从配置文件获取
+	syncToLocalCount  int
 }
 
-func NewRedisToLocalJob(redisCache *redis.Cache, localCache *local.Cache) *RedisToLocalJob {
+func NewRedisToLocalJob(redisCache *redis.Cache, localCache *local.Cache,syncToLocalCount int) *RedisToLocalJob {
 	return &RedisToLocalJob{
 		redisCache: redisCache,
 		localCache: localCache,
+		syncToLocalCount: syncToLocalCount,
 	}
 }
 
@@ -58,7 +63,7 @@ func (r *RedisToLocalJob) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// 获取100条
-	items, err := r.redisCache.Get(ctx, 99)
+	items, err := r.redisCache.Get(ctx, r.syncToLocalCount)
 	if err != nil {
 		// 记录一下错误日志
 		slog.Error("从redis获取数据失败", slog.Any("err", err))

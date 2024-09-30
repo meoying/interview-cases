@@ -35,7 +35,7 @@ func (c *Cache) Set(ctx context.Context, rankItem []domain.RankItem) error {
 }
 
 func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
-	members, err := c.client.ZRevRangeWithScores(ctx, c.key, 0, int64(n)).Result()
+	members, err := c.client.ZRevRangeWithScores(ctx, c.key, 0, int64(n-1)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
 	return list, nil
 }
 
-// SyncRank 用于定时任务同步到redis
+// SyncRank 用于定时任务同步到redis，先删除然后将数据重新写入
 func (c *Cache) SyncRank(ctx context.Context, rankItems []domain.RankItem) error {
 	args := make([]any, 0, len(rankItems))
 	for _, rankItem := range rankItems {

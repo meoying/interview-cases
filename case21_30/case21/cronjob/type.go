@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-// TriSvc 第三方服务用于提供全量的数据
+// TriSvc 第三方服务用于模拟前1000名的数据
 type TriSvc interface {
 	TopN(ctx context.Context, n int) ([]domain.RankItem, error)
 }
