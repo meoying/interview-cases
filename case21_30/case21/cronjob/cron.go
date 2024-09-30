@@ -8,8 +8,8 @@ import (
 
 func InitJob(triSvc TriSvc, redisCache *redis.Cache, localCache *local.Cache) error {
 	c := cron.New()
-	// 每两分钟将db同步进redis，真正生产可以修改成1小时一次
-	_, err := c.AddJob("*/2 * * * *", NewDBToRedisJob(redisCache, triSvc))
+	// 每三分钟分钟将db同步进redis，真正生产可以修改成1小时一次
+	_, err := c.AddJob("*/3 * * * *", NewDBToRedisJob(redisCache, triSvc))
 	if err != nil {
 		return err
 	}

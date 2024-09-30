@@ -33,7 +33,7 @@ func (d *ToRedisJob) Run() {
 		return
 	}
 	// 记录到redis
-	err = d.redisCache.Set(ctx, items)
+	err = d.redisCache.SyncRank(ctx, items)
 	if err != nil {
 		// 记录一下错误日志
 		slog.Error("数据同步到redis失败", slog.Any("err", err))

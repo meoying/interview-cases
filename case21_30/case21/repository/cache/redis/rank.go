@@ -2,9 +2,16 @@ package redis
 
 import (
 	"context"
+	_ "embed"
+	"fmt"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/redis/go-redis/v9"
 	"interview-cases/case21_30/case21/domain"
+)
+
+var (
+	//go:embed lua/sync.lua
+	syncLua string
 )
 
 type Cache struct {
@@ -40,3 +47,14 @@ func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
 	})
 	return list, nil
 }
+
+// SyncRank 用于定时任务同步到redis
+func (c *Cache) SyncRank(ctx context.Context, rankItems []domain.RankItem) error {
+	args := make([]any, 0, len(rankItems))
+	for _, rankItem := range rankItems {
+		args = append(args, fmt.Sprintf("%d", rankItem.Score), rankItem.Name)
+	}
+	_, err := c.client.Eval(ctx, syncLua, []string{c.key}, args...).Result()
+	return err
+}
+

@@ -31,23 +31,25 @@ func (t *TestSuite) SetupSuite() {
 }
 
 func (t *TestSuite) TestRank() {
-	// 等待两分钟让定时任务将数据同步到cache
-	time.Sleep(2*time.Minute + 10*time.Second)
-	// 查看cache中的数据
-	t.checkCacheData()
-	// 等待一分钟看定时任务有没有将数据同步到本地缓存
+	// 更新数据
+	t.updateItems()
+	// 等待一分钟看定时任务有没有将redis数据同步到本地缓存
 	time.Sleep(1*time.Minute + 10*time.Second)
 	// 查看前100名
 	items, err := t.svc.TopN(context.Background())
 	require.NoError(t.T(), err)
-	// 查看本地缓存中的数据
-	t.checkItems(items)
-	// 更新数据
-	t.updateItems()
-	// 等待同步到本地缓存
+	// 校验本地缓存中的数据
+	t.checkItems(items, t.getData(1901, 2000))
+	// 再等两分钟
+	time.Sleep(2*time.Minute + 10*time.Second)
+	// 校验redis中的数据是否已经同步
+	t.checkCacheData()
+	// 再等一分钟等待redis中的数据是否同步到本地缓存
 	time.Sleep(1*time.Minute + 10*time.Second)
 	items, err = t.svc.TopN(context.Background())
-	t.checkUpdateData(items)
+	require.NoError(t.T(), err)
+	// 查看本地缓存中的数据
+	t.checkItems(items, t.getData(900, 999))
 }
 
 // 更新数据
@@ -55,11 +57,6 @@ func (t *TestSuite) updateItems() {
 	items := t.getData(1000, 2000)
 	err := t.svc.Update(context.Background(), items)
 	require.NoError(t.T(), err)
-}
-
-func (t *TestSuite) checkUpdateData(items []domain.RankItem) {
-	wantData := t.getData(1901, 2000)
-	assert.Equal(t.T(), wantData, items)
 }
 
 func (t *TestSuite) checkCacheData() {
@@ -70,8 +67,7 @@ func (t *TestSuite) checkCacheData() {
 }
 
 // 校验获取数据是否正确
-func (t *TestSuite) checkItems(actualItems []domain.RankItem) {
-	wantItems := t.getData(900, 999)
+func (t *TestSuite) checkItems(actualItems []domain.RankItem, wantItems []domain.RankItem) {
 	assert.Equal(t.T(), wantItems, actualItems)
 }
 
