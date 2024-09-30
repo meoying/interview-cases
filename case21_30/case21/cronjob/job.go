@@ -4,33 +4,32 @@ import (
 	"context"
 	"interview-cases/case21_30/case21/repository/cache/local"
 	"interview-cases/case21_30/case21/repository/cache/redis"
-	"interview-cases/case21_30/case21/repository/dao"
 	"log/slog"
 
 	"time"
 )
 
-// DBToRedisJob db同步到redis
-type DBToRedisJob struct {
+// ToRedisJob 同步到redis
+type ToRedisJob struct {
 	redisCache *redis.Cache
-	db         dao.RankDAO
+	triSvc     TriSvc
 }
 
-func NewDBToRedisJob(redisCache *redis.Cache, db dao.RankDAO) *DBToRedisJob {
-	return &DBToRedisJob{
+func NewDBToRedisJob(redisCache *redis.Cache, triSvc TriSvc) *ToRedisJob {
+	return &ToRedisJob{
 		redisCache: redisCache,
-		db:         db,
+		triSvc:     triSvc,
 	}
 }
 
-func (d *DBToRedisJob) Run() {
+func (d *ToRedisJob) Run() {
 	// 从db取出1000条数据
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	items, err := d.db.TopN(ctx, 1000)
+	items, err := d.triSvc.TopN(ctx, 1000)
 	if err != nil {
 		// 记录一下错误日志
-		slog.Error("从db获取数据失败", slog.Any("err", err))
+		slog.Error("从全局获取获取数据失败", slog.Any("err", err))
 		return
 	}
 	// 记录到redis
@@ -59,7 +58,7 @@ func (r *RedisToLocalJob) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// 获取100条
-	items, err := r.redisCache.Get(ctx, 100)
+	items, err := r.redisCache.Get(ctx, 99)
 	if err != nil {
 		// 记录一下错误日志
 		slog.Error("从redis获取数据失败", slog.Any("err", err))
@@ -67,4 +66,7 @@ func (r *RedisToLocalJob) Run() {
 	}
 	// 刷新到本地缓存
 	err = r.localCache.Set(ctx, items)
+	if err != nil {
+		slog.Error("同步数据到本地失败", slog.Any("err", err))
+	}
 }

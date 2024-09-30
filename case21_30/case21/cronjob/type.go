@@ -1,4 +1,4 @@
-package dao
+package cronjob
 
 import (
 	"context"
@@ -7,26 +7,23 @@ import (
 	"sort"
 )
 
-// 从db获取数据
-type RankDAO interface {
+// TriSvc 第三方服务用于提供全量的数据
+type TriSvc interface {
 	TopN(ctx context.Context, n int) ([]domain.RankItem, error)
 }
 
-// 模拟从数据库拿数据
-type MockRankDAO struct {
-	Start int
+type triSvc struct {
+	start int
 }
 
-func NewMockRankDAO(start int) RankDAO {
-	return &MockRankDAO{
-		Start: start,
-	}
+func NewMockTriSvc(start int) TriSvc {
+	return &triSvc{start: start}
 }
 
-func (m *MockRankDAO) TopN(ctx context.Context, n int) ([]domain.RankItem, error) {
+func (t *triSvc) TopN(ctx context.Context, n int) ([]domain.RankItem, error) {
 	items := make([]domain.RankItem, 0, n)
 	for i := 0; i < n; i++ {
-		index := m.Start + i
+		index := t.start + i
 		items = append(items, domain.RankItem{
 			Name:  fmt.Sprintf("item_%d", index),
 			Score: i,
