@@ -2,91 +2,93 @@ package case16
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-redis/redismock/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"interview-cases/case11_20/case16/cache"
 	"testing"
+	"time"
 )
 
-func TestCase16(t *testing.T) {
-	clientA, mockA := redismock.NewClientMock()
-	clientB, mockB := redismock.NewClientMock()
+func TestRedisManager_Normal(t *testing.T) {
+	// 模拟 Redis 节点 a 和 b
+	rdbA, mockA := redismock.NewClientMock()
+	rdbB, _ := redismock.NewClientMock()
 
-	cKey := "test_key"
-	data := "cache"
+	key := "test_key"
+	val := "test_value"
 
-	testCases := []struct {
-		name    string
-		ctx     context.Context
-		before  func() *cache.Redis
-		wantRes string
-		wantErr error
-	}{
-		{
-			name: "节点A正常，读写缓存",
-			ctx:  context.Background(),
-			before: func() *cache.Redis {
-				mockA.ExpectPing().SetVal("PONG")
-				mockA.ExpectGet(cKey).SetErr(redis.Nil)
-				mockA.ExpectPing().SetVal("PONG")
-				mockA.ExpectSet(cKey, data, 0).SetVal("OK")
-				mockA.ExpectPing().SetVal("PONG")
-				mockA.ExpectGet(cKey).SetVal(data)
+	// 模拟 ping a 节点成功
+	mockA.ExpectPing().SetVal("PONG")
+	mockA.ExpectSet(key, val, 0).SetVal("OK")
+	mockA.ExpectGet(key).SetVal(val)
 
-				r := cache.NewRedis(clientA, clientB)
-				return r
-			},
-			wantRes: data,
-		},
-		{
-			name: "节点A异常，读写缓存",
-			before: func() *cache.Redis {
-				mockA.ExpectPing().SetErr(redis.Nil)
-				mockB.ExpectGet(cKey).SetErr(redis.Nil)
-				mockA.ExpectPing().SetErr(redis.Nil)
-				mockB.ExpectSet(cKey, data, 0).SetVal("OK")
-				mockA.ExpectPing().SetErr(redis.Nil)
-				mockB.ExpectGet(cKey).SetVal(data)
+	ctx := context.Background()
+	rm := cache.NewRedisManager(rdbA, rdbB)
 
-				r := cache.NewRedis(clientA, clientB)
-				return r
-			},
-			wantRes: data,
-		},
-		{
-			name: "双节点异常",
-			before: func() *cache.Redis {
-				mockA.ExpectPing().SetErr(redis.Nil)
-				mockB.ExpectGet(cKey).SetErr(redis.Nil)
-				mockA.ExpectPing().SetErr(redis.Nil)
-				mockB.ExpectSet(cKey, data, 0).SetErr(redis.Nil)
+	go rm.HeartbeatChecker(ctx)
 
-				r := cache.NewRedis(clientA, clientB)
-				return r
-			},
-			wantErr: redis.Nil,
-		},
-	}
+	time.Sleep(time.Second)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			r := tc.before()
-			c, err := r.Get(tc.ctx, cKey)
+	err := rm.SetValue(ctx, key, val, 0)
+	require.NoError(t, err)
 
-			// 不存在则写入缓存
-			if err != nil && err == redis.Nil {
-				err := r.Set(tc.ctx, cKey, data)
-				assert.Equal(t, tc.wantErr, err)
-				if err != nil {
-					return
-				}
-			}
+	res, err := rm.GetValue(ctx, key)
+	require.NoError(t, err)
+	assert.Equal(t, val, res)
+}
 
-			c, err = r.Get(tc.ctx, cKey)
-			require.NoError(t, err)
-			assert.Equal(t, tc.wantRes, c)
-		})
-	}
+func TestRedisManager_mainNodeErr(t *testing.T) {
+	// 模拟 Redis 节点 a 和 b
+	rdbA, mockA := redismock.NewClientMock()
+	rdbB, mockB := redismock.NewClientMock()
+
+	key := "test_key"
+	val := "test_value"
+
+	// 模拟 ping a 节点成功
+	mockA.ExpectPing().SetVal("PONG")
+	mockB.ExpectSet(key, val, 0).SetVal("OK")
+	mockB.ExpectGet(key).SetVal(val)
+
+	ctx := context.Background()
+	rm := cache.NewRedisManager(rdbA, rdbB)
+
+	go rm.HeartbeatChecker(ctx)
+
+	time.Sleep(time.Second)
+
+	rm.SimulateFailure()
+	err := rm.SetValue(ctx, key, val, 0)
+	require.NoError(t, err)
+
+	res, err := rm.GetValue(ctx, key)
+	require.NoError(t, err)
+	assert.Equal(t, val, res)
+}
+
+func TestRedisManager_bothErr(t *testing.T) {
+	// 模拟 Redis 节点 a 和 b
+	rdbA, mockA := redismock.NewClientMock()
+	rdbB, mockB := redismock.NewClientMock()
+
+	key := "test_key"
+	val := "test_value"
+
+	// 模拟 ping a 节点成功
+	mockA.ExpectPing().SetVal("PONG")
+	mockB.ExpectSet(key, val, 0).SetErr(redis.Nil)
+
+	ctx := context.Background()
+	rm := cache.NewRedisManager(rdbA, rdbB)
+
+	go rm.HeartbeatChecker(ctx)
+
+	time.Sleep(time.Second)
+
+	rm.SimulateFailure()
+	err := rm.SetValue(ctx, key, val, 0)
+	assert.Equal(t, fmt.Errorf("键 %s 不存在", key), err)
 }
