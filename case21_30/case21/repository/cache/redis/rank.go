@@ -7,6 +7,7 @@ import (
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/redis/go-redis/v9"
 	"interview-cases/case21_30/case21/domain"
+	"strconv"
 )
 
 var (
@@ -28,7 +29,7 @@ func NewCache(client redis.Cmdable, key string) *Cache {
 
 func (c *Cache) Set(ctx context.Context, rankItem []domain.RankItem) error {
 	members := slice.Map(rankItem, func(idx int, src domain.RankItem) redis.Z {
-		return redis.Z{Score: float64(src.Score), Member: src.Name}
+		return redis.Z{Score: float64(src.Score), Member: src.ID}
 	})
 	err := c.client.ZAdd(ctx, c.key, members...).Err()
 	return err
@@ -40,8 +41,10 @@ func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
 		return nil, err
 	}
 	list := slice.Map(members, func(idx int, src redis.Z) domain.RankItem {
+		mem := src.Member.(string)
+		id,_ := strconv.ParseInt(mem, 10, 64)
 		return domain.RankItem{
-			Name:  src.Member.(string),
+			ID:  id,
 			Score: int(src.Score),
 		}
 	})
@@ -52,7 +55,7 @@ func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
 func (c *Cache) SyncRank(ctx context.Context, rankItems []domain.RankItem) error {
 	args := make([]any, 0, len(rankItems))
 	for _, rankItem := range rankItems {
-		args = append(args, fmt.Sprintf("%d", rankItem.Score), rankItem.Name)
+		args = append(args, fmt.Sprintf("%d", rankItem.Score), rankItem.ID)
 	}
 	_, err := c.client.Eval(ctx, syncLua, []string{c.key}, args...).Result()
 	return err

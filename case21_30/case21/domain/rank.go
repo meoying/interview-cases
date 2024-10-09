@@ -2,6 +2,6 @@ package domain
 
 
 type RankItem struct {
-	Name  string
+	ID int64
 	Score int
 }

@@ -2,7 +2,6 @@ package case21
 
 import (
 	"context"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -13,6 +12,7 @@ import (
 	"interview-cases/case21_30/case21/repository/cache/redis"
 	"interview-cases/case21_30/case21/service"
 	"interview-cases/test"
+	"log"
 	"testing"
 
 	"time"
@@ -33,7 +33,9 @@ func (t *TestSuite) SetupSuite() {
 func (t *TestSuite) TestRank() {
 	// 更新数据
 	t.updateItems()
+	log.Println("更新数据")
 	// 等待一分钟看定时任务有没有将redis数据同步到本地缓存
+	log.Println("等待一分钟同步本地缓存。。。")
 	time.Sleep(1*time.Minute + 10*time.Second)
 	// 查看前100名
 	items, err := t.svc.TopN(context.Background())
@@ -41,9 +43,11 @@ func (t *TestSuite) TestRank() {
 	// 校验本地缓存中的数据
 	t.checkItems(items, t.getData(1901, 2000))
 	// 再等两分钟
+	log.Println("等待两分钟将全局数据更新进redis。。。")
 	time.Sleep(2*time.Minute + 10*time.Second)
 	// 校验redis中的数据是否已经同步
 	t.checkCacheData()
+	log.Println("等待一分钟同步进本地缓存。。。")
 	// 再等一分钟等待redis中的数据是否同步到本地缓存
 	time.Sleep(1*time.Minute + 10*time.Second)
 	// 获取本地缓存中的数据
@@ -89,7 +93,7 @@ func (t *TestSuite) getData(start, end int) []domain.RankItem {
 	items := make([]domain.RankItem, 0)
 	for i := end; i >= start; i-- {
 		items = append(items, domain.RankItem{
-			Name:  fmt.Sprintf("item_%d", i),
+			ID:    int64(i),
 			Score: i,
 		})
 	}

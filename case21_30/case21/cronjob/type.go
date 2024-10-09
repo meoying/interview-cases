@@ -2,7 +2,6 @@ package cronjob
 
 import (
 	"context"
-	"fmt"
 	"interview-cases/case21_30/case21/domain"
 	"sort"
 )
@@ -25,7 +24,7 @@ func (t *triSvc) TopN(ctx context.Context, n int) ([]domain.RankItem, error) {
 	for i := 0; i < n; i++ {
 		index := t.start + i
 		items = append(items, domain.RankItem{
-			Name:  fmt.Sprintf("item_%d", index),
+			ID:  int64( index),
 			Score: i,
 		})
 	}
