@@ -2,45 +2,15 @@ package case16
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-redis/redismock/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"interview-cases/case11_20/case16/cache"
 	"testing"
 	"time"
 )
 
-func TestRedisManager_Normal(t *testing.T) {
-	// 模拟 Redis 节点 a 和 b
-	rdbA, mockA := redismock.NewClientMock()
-	rdbB, _ := redismock.NewClientMock()
-
-	key := "test_key"
-	val := "test_value"
-
-	// 模拟 ping a 节点成功
-	mockA.ExpectPing().SetVal("PONG")
-	mockA.ExpectSet(key, val, 0).SetVal("OK")
-	mockA.ExpectGet(key).SetVal(val)
-
-	ctx := context.Background()
-	rm := cache.NewRedisManager(rdbA, rdbB)
-
-	go rm.HeartbeatChecker(ctx)
-
-	time.Sleep(time.Second)
-
-	err := rm.SetValue(ctx, key, val, 0)
-	require.NoError(t, err)
-
-	res, err := rm.GetValue(ctx, key)
-	require.NoError(t, err)
-	assert.Equal(t, val, res)
-}
-
-func TestRedisManager_mainNodeErr(t *testing.T) {
+func TestRedisManager(t *testing.T) {
 	// 模拟 Redis 节点 a 和 b
 	rdbA, mockA := redismock.NewClientMock()
 	rdbB, mockB := redismock.NewClientMock()
@@ -48,47 +18,105 @@ func TestRedisManager_mainNodeErr(t *testing.T) {
 	key := "test_key"
 	val := "test_value"
 
-	// 模拟 ping a 节点成功
-	mockA.ExpectPing().SetVal("PONG")
-	mockB.ExpectSet(key, val, 0).SetVal("OK")
-	mockB.ExpectGet(key).SetVal(val)
+	testCases := []struct {
+		name string
 
-	ctx := context.Background()
-	rm := cache.NewRedisManager(rdbA, rdbB)
+		ctx context.Context
 
-	go rm.HeartbeatChecker(ctx)
+		before func() *cache.RedisManager
+		after  func(context.Context, *cache.RedisManager) (string, error)
 
-	time.Sleep(time.Second)
+		wantRes string
+		wantErr error
+	}{
+		{
+			name: "main节点无异常",
+			ctx:  context.Background(),
+			before: func() *cache.RedisManager {
+				mockA.ExpectPing().SetVal("OK")
+				mockA.ExpectSet(key, val, 0).SetVal("OK")
+				mockA.ExpectGet(key).SetVal(val)
 
-	rm.SimulateFailure()
-	err := rm.SetValue(ctx, key, val, 0)
-	require.NoError(t, err)
+				return cache.NewRedisManager(rdbA, rdbB, 2, 2)
+			},
+			after: func(ctx context.Context, manager *cache.RedisManager) (string, error) {
+				time.Sleep(time.Second)
+				err := manager.SetValue(ctx, key, val, 0)
+				if err != nil {
+					return "", err
+				}
+				res, err := manager.GetValue(ctx, key)
+				return res, err
+			},
+			wantRes: val,
+		},
+		{
+			name: "main节点异常，切换到backup节点",
+			ctx:  context.Background(),
+			before: func() *cache.RedisManager {
+				mockA.ExpectPing().SetErr(redis.Nil)
+				mockA.ExpectPing().SetErr(redis.Nil)
 
-	res, err := rm.GetValue(ctx, key)
-	require.NoError(t, err)
-	assert.Equal(t, val, res)
-}
+				mockB.ExpectSet(key, val, 0).SetVal("OK")
+				mockB.ExpectGet(key).SetVal(val)
 
-func TestRedisManager_bothErr(t *testing.T) {
-	// 模拟 Redis 节点 a 和 b
-	rdbA, mockA := redismock.NewClientMock()
-	rdbB, mockB := redismock.NewClientMock()
+				return cache.NewRedisManager(rdbA, rdbB, 2, 2)
+			},
+			after: func(ctx context.Context, manager *cache.RedisManager) (string, error) {
+				time.Sleep(2 * time.Second)
 
-	key := "test_key"
-	val := "test_value"
+				err := manager.SetValue(ctx, key, val, 0)
+				if err != nil {
+					return "", err
+				}
+				res, err := manager.GetValue(ctx, key)
+				return res, err
+			},
+			wantRes: val,
+		},
+		{
+			name: "main节点恢复，切换回backup节点",
+			ctx:  context.Background(),
+			before: func() *cache.RedisManager {
+				mockA.ExpectPing().SetErr(redis.Nil)
+				mockA.ExpectPing().SetErr(redis.Nil)
+				mockA.ExpectPing().SetVal("OK")
+				mockA.ExpectPing().SetVal("OK")
 
-	// 模拟 ping a 节点成功
-	mockA.ExpectPing().SetVal("PONG")
-	mockB.ExpectSet(key, val, 0).SetErr(redis.Nil)
+				mockA.ExpectSet(key, val, 0).SetVal("OK")
+				mockA.ExpectGet(key).SetVal(val)
 
-	ctx := context.Background()
-	rm := cache.NewRedisManager(rdbA, rdbB)
+				mockB.ExpectSet(key, val, 0).SetVal("OK")
+				mockB.ExpectGet(key).SetVal(val)
 
-	go rm.HeartbeatChecker(ctx)
+				return cache.NewRedisManager(rdbA, rdbB, 2, 2)
+			},
+			after: func(ctx context.Context, manager *cache.RedisManager) (string, error) {
+				time.Sleep(4 * time.Second)
 
-	time.Sleep(time.Second)
+				err := manager.SetValue(ctx, key, val, 0)
+				if err != nil {
+					return "", err
+				}
+				res, err := manager.GetValue(ctx, key)
+				return res, err
+			},
+			wantRes: val,
+		},
+	}
 
-	rm.SimulateFailure()
-	err := rm.SetValue(ctx, key, val, 0)
-	assert.Equal(t, fmt.Errorf("键 %s 不存在", key), err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rdbManager := tc.before()
+			go rdbManager.HeartbeatChecker(tc.ctx)
+			res, err := tc.after(tc.ctx, rdbManager)
+			assert.Equal(t, tc.wantErr, err)
+
+			if err != nil {
+				return
+			}
+
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
 }
