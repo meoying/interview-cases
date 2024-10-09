@@ -43,7 +43,7 @@ func (m *MemoryLimiter) monitor() {
 			continue
 		}
 		// 超内存了
-		if usage >= 0.8 {
+		if usage >= 80 {
 			atomic.StoreInt32(&m.state, 1)
 		} else {
 			atomic.StoreInt32(&m.state, 0)

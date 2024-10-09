@@ -20,7 +20,7 @@ func (m *MockMon) GetMemoryUsage(ctx context.Context) (float64, error) {
 	// 2秒后超过80%
 	intervalTime := nowTime - m.startTime
 	if intervalTime >= 2000 && intervalTime <= 5000 {
-		return 0.95, nil
+		return 95, nil
 	}
-	return 0.5, nil
+	return 50, nil
 }
