@@ -2,17 +2,11 @@ package redis
 
 import (
 	"context"
-	_ "embed"
-	"fmt"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/redis/go-redis/v9"
 	"interview-cases/case21_30/case21/domain"
+	"log"
 	"strconv"
-)
-
-var (
-	//go:embed lua/sync.lua
-	syncLua string
 )
 
 type Cache struct {
@@ -31,7 +25,8 @@ func (c *Cache) Set(ctx context.Context, rankItem []domain.RankItem) error {
 	members := slice.Map(rankItem, func(idx int, src domain.RankItem) redis.Z {
 		return redis.Z{Score: float64(src.Score), Member: src.ID}
 	})
-	err := c.client.ZAdd(ctx, c.key, members...).Err()
+
+	err := c.client.ZAddXX(ctx, c.key, members...).Err()
 	return err
 }
 
@@ -42,9 +37,9 @@ func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
 	}
 	list := slice.Map(members, func(idx int, src redis.Z) domain.RankItem {
 		mem := src.Member.(string)
-		id,_ := strconv.ParseInt(mem, 10, 64)
+		id, _ := strconv.ParseInt(mem, 10, 64)
 		return domain.RankItem{
-			ID:  id,
+			ID:    id,
 			Score: int(src.Score),
 		}
 	})
@@ -53,11 +48,24 @@ func (c *Cache) Get(ctx context.Context, n int) ([]domain.RankItem, error) {
 
 // SyncRank 用于定时任务同步到redis，先删除然后将数据重新写入
 func (c *Cache) SyncRank(ctx context.Context, rankItems []domain.RankItem) error {
-	args := make([]any, 0, len(rankItems))
-	for _, rankItem := range rankItems {
-		args = append(args, fmt.Sprintf("%d", rankItem.Score), rankItem.ID)
+	log.Println("db同步redis")
+	mems := slice.Map(rankItems, func(idx int, src domain.RankItem) redis.Z {
+		return redis.Z{
+			Score:  float64(src.Score),
+			Member: src.ID,
+		}
+	})
+	pipe := c.client.TxPipeline()
+	pipe.Del(ctx, c.key)
+	pipe.ZAdd(ctx, c.key, mems...)
+	res, err := pipe.Exec(ctx)
+	if err != nil {
+		return err
 	}
-	_, err := c.client.Eval(ctx, syncLua, []string{c.key}, args...).Result()
-	return err
+	for _, v := range res {
+		if v.Err() != nil {
+			return err
+		}
+	}
+	return nil
 }
-

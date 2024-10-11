@@ -2,8 +2,10 @@ package cronjob
 
 import (
 	"context"
+	"github.com/ecodeclub/ekit/slice"
+	articleDomain "interview-cases/case21_30/case21/cronjob/tri/domain"
+	"interview-cases/case21_30/case21/cronjob/tri/service"
 	"interview-cases/case21_30/case21/domain"
-	"sort"
 )
 
 // TriSvc 第三方服务用于模拟前1000名的数据
@@ -11,25 +13,25 @@ type TriSvc interface {
 	TopN(ctx context.Context, n int) ([]domain.RankItem, error)
 }
 
-type triSvc struct {
-	start int
+// 文章服务模拟文章的点赞数据
+type articleSvc struct {
+	svc service.ArticleSvc
 }
 
-func NewMockTriSvc(start int) TriSvc {
-	return &triSvc{start: start}
+func NewTriSvc(svc service.ArticleSvc) TriSvc {
+	return &articleSvc{svc: svc}
 }
 
-func (t *triSvc) TopN(ctx context.Context, n int) ([]domain.RankItem, error) {
-	items := make([]domain.RankItem, 0, n)
-	for i := 0; i < n; i++ {
-		index := t.start + i
-		items = append(items, domain.RankItem{
-			ID:  int64( index),
-			Score: i,
-		})
+func (t *articleSvc) TopN(ctx context.Context, n int) ([]domain.RankItem, error) {
+	articles, err := t.svc.TopN(ctx, n)
+	if err != nil {
+		return nil, err
 	}
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Score > items[j].Score
+	ans := slice.Map(articles, func(idx int, src articleDomain.Article) domain.RankItem {
+		return domain.RankItem{
+			ID:    src.ID,
+			Score: int(src.LikeCnt),
+		}
 	})
-	return items, nil
+	return ans, nil
 }

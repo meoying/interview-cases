@@ -3,11 +3,14 @@ module interview-cases
 go 1.22.0
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/ecodeclub/ekit v0.0.9
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/wire v0.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.6.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.8.0
@@ -46,12 +49,12 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
