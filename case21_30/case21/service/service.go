@@ -10,9 +10,9 @@ import (
 // 榜单服务
 type RankService interface {
 	// 榜单前一百
-	TopN(ctx context.Context) (items []domain.RankItem, err error)
+	TopN(ctx context.Context) (items []domain.Article, err error)
 	// 更新榜单数据
-	Update(ctx context.Context, items []domain.RankItem) (err error)
+	Update(ctx context.Context, items []domain.Article) (err error)
 }
 
 
@@ -25,10 +25,10 @@ func NewRankService(repo repository.RankRepository) RankService {
 	}
 }
 
-func (t *topSvc) TopN(ctx context.Context) ([]domain.RankItem, error) {
+func (t *topSvc) TopN(ctx context.Context) ([]domain.Article, error) {
 	return t.repo.TopN(ctx)
 }
 
-func (t *topSvc) Update(ctx context.Context, item []domain.RankItem) (err error) {
+func (t *topSvc) Update(ctx context.Context, item []domain.Article) (err error) {
 	return t.repo.ReplaceTopN(ctx,item)
 }

@@ -1,7 +1,7 @@
 package domain
 
 
-type RankItem struct {
-	ID int64
-	Score int
+type Article struct {
+	ID      int64
+	LikeCnt int
 }

@@ -12,14 +12,14 @@ import (
 // ToRedisJob 同步到redis
 type ToRedisJob struct {
 	redisCache *redis.Cache
-	triSvc     TriSvc
+	articleSvc     ArticleSvc
 	syncToRedisCount int
 }
 
-func NewDBToRedisJob(redisCache *redis.Cache, triSvc TriSvc,syncToRedisCount int) *ToRedisJob {
+func NewDBToRedisJob(redisCache *redis.Cache, triSvc ArticleSvc,syncToRedisCount int) *ToRedisJob {
 	return &ToRedisJob{
 		redisCache: redisCache,
-		triSvc:     triSvc,
+		articleSvc:     triSvc,
 		syncToRedisCount: syncToRedisCount,
 	}
 }
@@ -28,7 +28,7 @@ func (d *ToRedisJob) Run() {
 	// 从db取出1000条数据
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	items, err := d.triSvc.TopN(ctx, d.syncToRedisCount)
+	items, err := d.articleSvc.TopN(ctx, d.syncToRedisCount)
 	if err != nil {
 		// 记录一下错误日志
 		slog.Error("从全局获取获取数据失败", slog.Any("err", err))

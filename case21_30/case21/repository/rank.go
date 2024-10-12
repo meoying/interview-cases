@@ -8,8 +8,8 @@ import (
 )
 
 type RankRepository interface {
-	TopN(ctx context.Context) ([]domain.RankItem, error)
-	ReplaceTopN(ctx context.Context, items []domain.RankItem) error
+	TopN(ctx context.Context) ([]domain.Article, error)
+	ReplaceTopN(ctx context.Context, items []domain.Article) error
 }
 
 func NewRankRepository(localCache *local.Cache, redisCache *redis.Cache) RankRepository {
@@ -24,12 +24,12 @@ type rankRepository struct {
 	redisCache *redis.Cache
 }
 
-func (r *rankRepository) TopN(ctx context.Context) ([]domain.RankItem, error) {
+func (r *rankRepository) TopN(ctx context.Context) ([]domain.Article, error) {
 	// 直接读取本地
 	return r.localCache.Get(ctx)
 }
 
-func (r *rankRepository) ReplaceTopN(ctx context.Context, items []domain.RankItem) error {
+func (r *rankRepository) ReplaceTopN(ctx context.Context, items []domain.Article) error {
 	// 写入redis
 	return r.redisCache.Set(ctx, items)
 }
