@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/redis/go-redis/v9"
 	"interview-cases/case21_30/case21/domain"
@@ -62,10 +63,11 @@ func (c *Cache) SyncRank(ctx context.Context, rankItems []domain.RankItem) error
 	if err != nil {
 		return err
 	}
-	for _, v := range res {
-		if v.Err() != nil {
-			return err
-		}
+	if res[0].Err() != nil {
+		return fmt.Errorf("删除原有的键失败 %v", res[0].Err())
+	}
+	if res[1].Err() != nil {
+		return fmt.Errorf("往zset添加元素失败 %v",res[1].Err())
 	}
 	return nil
 }

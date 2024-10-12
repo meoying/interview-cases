@@ -3,9 +3,9 @@ package cronjob
 import (
 	"context"
 	"github.com/ecodeclub/ekit/slice"
-	articleDomain "interview-cases/case21_30/case21/cronjob/tri/domain"
-	"interview-cases/case21_30/case21/cronjob/tri/service"
 	"interview-cases/case21_30/case21/domain"
+	articleDomain "interview-cases/case21_30/case21/tri/domain"
+	"interview-cases/case21_30/case21/tri/service"
 )
 
 // TriSvc 第三方服务用于模拟前1000名的数据

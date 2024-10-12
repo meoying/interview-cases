@@ -5,9 +5,9 @@ package tri
 import (
 	"github.com/google/wire"
 	"gorm.io/gorm"
-	"interview-cases/case21_30/case21/cronjob/tri/repository"
-	"interview-cases/case21_30/case21/cronjob/tri/repository/dao"
-	"interview-cases/case21_30/case21/cronjob/tri/service"
+	"interview-cases/case21_30/case21/tri/repository"
+	"interview-cases/case21_30/case21/tri/repository/dao"
+	"interview-cases/case21_30/case21/tri/service"
 )
 
 func InitModule(db *gorm.DB) (*Module, error) {

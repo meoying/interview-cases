@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"github.com/ecodeclub/ekit/slice"
-	"interview-cases/case21_30/case21/cronjob/tri/domain"
-	"interview-cases/case21_30/case21/cronjob/tri/repository/dao"
+	"interview-cases/case21_30/case21/tri/domain"
+	"interview-cases/case21_30/case21/tri/repository/dao"
 )
 
 type ArticleRepo interface {
@@ -18,7 +18,7 @@ type articleRepo struct {
 	articleDao dao.ArticleStaticDAO
 }
 
-func NewArticleRepo(articleDao dao.ArticleStaticDAO )ArticleRepo {
+func NewArticleRepo(articleDao dao.ArticleStaticDAO) ArticleRepo {
 	return &articleRepo{
 		articleDao: articleDao,
 	}
