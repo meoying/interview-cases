@@ -1,20 +1,20 @@
-package case13
+package case14
 
 import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-const bizTopic =  "biz_topic"
+const bizTopic = "biz_topic"
 
 type BizConsumer struct {
 	consumer *kafka.Consumer
 }
 
-func NewBizConsumer(addr string) (*BizConsumer,error) {
+func NewBizConsumer(addr string) (*BizConsumer, error) {
 	config := &kafka.ConfigMap{
 		"bootstrap.servers": addr,
 		"auto.offset.reset": "earliest",
-		"group.id": "biz_group",
+		"group.id":          "biz_group",
 	}
 	consumer, err := kafka.NewConsumer(config)
 	if err != nil {
@@ -26,11 +26,11 @@ func NewBizConsumer(addr string) (*BizConsumer,error) {
 	}
 	return &BizConsumer{
 		consumer: consumer,
-	},nil
+	}, nil
 }
 
 func (b *BizConsumer) Consume() (string, error) {
-	msg,err := b.consumer.ReadMessage(-1)
+	msg, err := b.consumer.ReadMessage(-1)
 	if err != nil {
 		return "", err
 	}
