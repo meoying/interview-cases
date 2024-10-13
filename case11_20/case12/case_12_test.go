@@ -1,4 +1,4 @@
-package case_648
+package case12
 
 import (
 	"github.com/stretchr/testify/assert"
