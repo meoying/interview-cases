@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "../pb;pb";  // 指定生成的 Go 包路径
+
+package proto;
+
+// 定义一个测试插件的服务
+service TestService {
+  rpc Test(TestRequest) returns (TestResponse);
+}
+
+// 定义请求消息 不考虑分页等情况，简单化
+message TestRequest {
+}
+
+message TestResponse {
+  int64 timestamp = 1;
+}
