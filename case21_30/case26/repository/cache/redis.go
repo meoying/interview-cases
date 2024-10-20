@@ -45,7 +45,7 @@ func (r *RedisCoupon) GetCoupon(ctx context.Context) (int, error) {
 	pipe := r.client.TxPipeline()
 	resList := make([]*redis.StringCmd, 0)
 	for i := 0; i < r.keyNumber; i++ {
-		resList = append(resList, pipe.Get(ctx, r.key))
+		resList = append(resList, pipe.Get(ctx, fmt.Sprintf("%s:%d", r.key, i)))
 	}
 	_, err := pipe.Exec(ctx)
 	if err != nil {
@@ -92,7 +92,7 @@ func (r *RedisCoupon) DecrCoupon(ctx context.Context) error {
 	idx := rand.IntN(r.keyNumber)
 	for i := 0; i < r.keyNumber; i++ {
 		v := idx + i
-		if r.getActiveSlice(v % r.keyNumber) {
+		if !r.getActiveSlice(v % r.keyNumber) {
 			continue
 		}
 		coupon, err := r.client.Decr(ctx, fmt.Sprintf("%s:%d", r.key, v%r.keyNumber)).Result()
@@ -110,13 +110,14 @@ func (r *RedisCoupon) DecrCoupon(ctx context.Context) error {
 	return ErrInsufficientCoupon
 }
 
-func (r *RedisCoupon) CheckUidExist(ctx context.Context, uid int64) (bool, error) {
-	res, err := r.client.Eval(ctx, bloomLua, []string{bloomFilter}, uid).Result()
+func (r *RedisCoupon) CheckUidExist(ctx context.Context, uid int) (bool, error) {
+	bloomFilterKey := fmt.Sprintf("%s:%d", bloomFilter, uid%r.keyNumber)
+	res, err := r.client.Eval(ctx, bloomLua, []string{bloomFilterKey}, uid).Result()
 	if err != nil {
-		 return false, err
+		return false, err
 	}
-	existed := res.(bool)
-	return existed, nil
+	existed := res.(int64)
+	return existed == 1, nil
 }
 
 func (r *RedisCoupon) setActiveSlice(idx int) {
