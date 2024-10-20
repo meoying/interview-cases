@@ -21,7 +21,7 @@ const defaultCoupon = 100000
 
 type CouponSvcImpl struct {
 	repo repository.CouponRepository
-	// 10w库存 50%直接拒绝 没减少1w 减少5%的拒绝率
+	// 10w库存 50%直接拒绝 没减少1w 减少10%的拒绝率直到为0
 	m *atomicx.Value[int]
 }
 
@@ -78,7 +78,6 @@ func (c *CouponSvcImpl) adjust() {
 		reduceCoupons := defaultCoupon - coupons
 		wantAdjust := max(0, 50-(reduceCoupons/10000)*10)
 		c.m.Store(wantAdjust)
-		log.Printf("xxxxxxx修改了随机拒绝概率 %d", wantAdjust)
 		time.Sleep(10 * time.Millisecond)
 	}
 }

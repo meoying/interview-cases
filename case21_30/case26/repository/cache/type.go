@@ -12,6 +12,6 @@ type Cache interface {
 	DecrCoupon(ctx context.Context) error
 	// GetCoupon 获取库存
 	GetCoupon(ctx context.Context) (int, error)
-	// SetUidNX 设置抽奖的用户 true设置 false加载
+	// CheckUidExist 设置抽奖的用户 true存在 false不存在
 	CheckUidExist(ctx context.Context, uid int) (bool,error)
 }

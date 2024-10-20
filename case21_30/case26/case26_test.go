@@ -36,7 +36,8 @@ func (t *TestSuite) TestPreempt() {
 	preemptUids := make([]int, 0, 100000)
 	mu := &sync.RWMutex{}
 	wg := &sync.WaitGroup{}
-	for i := 0; i <= 500000; i++ {
+	for i := 0; i <= 1000000; i++ {
+		// 保证获取连接不超时
 		time.Sleep(10 * time.Microsecond)
 		if rand.IntN(100) > 20 {
 			wg.Add(1)
