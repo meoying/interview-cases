@@ -40,9 +40,9 @@ func (c *CouponSvcImpl) Preempt(ctx context.Context, uid int) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if ok {
+	if !ok {
 		// 说明已经抢过了
-		log.Println("抢过了")
+		log.Printf("%d 抢过了",uid)
 		return false, nil
 	}
 	if c.randomReject() {
@@ -78,6 +78,6 @@ func (c *CouponSvcImpl) adjust() {
 		reduceCoupons := defaultCoupon - coupons
 		wantAdjust := max(0, 50-(reduceCoupons/10000)*10)
 		c.m.Store(wantAdjust)
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }

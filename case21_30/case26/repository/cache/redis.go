@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/redis/go-redis/v9"
@@ -12,8 +11,6 @@ import (
 )
 
 var (
-	//go:embed lua/bloom.lua
-	bloomLua    string
 	bloomFilter string = "bloom_filter"
 )
 
@@ -38,6 +35,7 @@ func NewRedisCoupon(ctx context.Context, client redis.Cmdable, key string, keyNu
 	if err != nil {
 		return nil, fmt.Errorf("设置库存失败 %v", err)
 	}
+
 	return r, nil
 }
 
@@ -112,12 +110,8 @@ func (r *RedisCoupon) DecrCoupon(ctx context.Context) error {
 
 func (r *RedisCoupon) CheckUidExist(ctx context.Context, uid int) (bool, error) {
 	bloomFilterKey := fmt.Sprintf("%s:%d", bloomFilter, uid%r.keyNumber)
-	res, err := r.client.Eval(ctx, bloomLua, []string{bloomFilterKey}, uid).Result()
-	if err != nil {
-		return false, err
-	}
-	existed := res.(int64)
-	return existed == 1, nil
+	// 无论有没有先把坑占了
+	return r.client.BFAdd(ctx, bloomFilterKey, uid).Result()
 }
 
 func (r *RedisCoupon) setActiveSlice(idx int) {
