@@ -7,3 +7,9 @@ func InitRedis() redis.Cmdable {
 		Addr: "localhost:6379",
 	})
 }
+
+func InitRedisBloom() redis.Cmdable {
+	return redis.NewClient(&redis.Options{
+		Addr: "localhost:6380",
+	})
+}
