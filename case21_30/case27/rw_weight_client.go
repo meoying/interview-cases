@@ -11,34 +11,33 @@ const (
 )
 
 type RWWeightClient struct {
-	mu           *sync.RWMutex
-	writeNodes   []*ServiceNode
-	readNodes    []*ServiceNode
-	loadBalancer LoadBalancer
+	mu         *sync.RWMutex
+	writeNodes []*ServiceNode
+	readNodes  []*ServiceNode
+	// 读节点的负载均衡策略
+	readLoadBalancer LoadBalancer
+	// 写节点的负载均衡策略
+	writeLoadBalancer LoadBalancer
 }
 
-func NewRWWeightClient(loadBalancer LoadBalancer) *RWWeightClient {
+func NewRWWeightClient(readLoadBalancer, writeLoadBalancer LoadBalancer) *RWWeightClient {
 	return &RWWeightClient{
-		mu:           &sync.RWMutex{},
-		writeNodes:   make([]*ServiceNode, 0),
-		readNodes:    make([]*ServiceNode, 0),
-		loadBalancer: loadBalancer,
+		mu:                &sync.RWMutex{},
+		writeNodes:        make([]*ServiceNode, 0),
+		readNodes:         make([]*ServiceNode, 0),
+		readLoadBalancer:  readLoadBalancer,
+		writeLoadBalancer: writeLoadBalancer,
 	}
 }
 
 func (r *RWWeightClient) Get(ctx context.Context) (*ServiceNode, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-
-	nodes := r.readNodes
 	if r.isWrite(ctx) {
-		nodes = r.writeNodes
+		return r.writeLoadBalancer.Select(r.writeNodes)
+	} else {
+		return r.readLoadBalancer.Select(r.readNodes)
 	}
-	bestNode, err := r.loadBalancer.Select(nodes)
-	if err != nil {
-		return nil, err
-	}
-	return bestNode, nil
 }
 
 func (r *RWWeightClient) AddReadNode(node *ServiceNode) error {
