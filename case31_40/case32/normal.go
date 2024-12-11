@@ -1,4 +1,4 @@
-package case31
+package case32
 
 import (
 	"context"
@@ -19,13 +19,13 @@ type NormalAdaptiveStrategy struct {
 	failNum int
 }
 
-func NewNormalAdaptiveStrategy(strategy Strategy,interval time.Duration,failNum int)*NormalAdaptiveStrategy {
+func NewNormalAdaptiveStrategy(strategy Strategy, interval time.Duration, failNum int) *NormalAdaptiveStrategy {
 	return &NormalAdaptiveStrategy{
-		mu: &sync.RWMutex{},
-		strategy: strategy,
+		mu:          &sync.RWMutex{},
+		strategy:    strategy,
 		slideWindow: make([]req, 0),
-		failNum: failNum,
-		interval: interval,
+		failNum:     failNum,
+		interval:    interval,
 	}
 }
 
