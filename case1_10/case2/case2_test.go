@@ -1,4 +1,4 @@
-package case31
+package case2
 
 import (
 	"github.com/stretchr/testify/require"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestCase31(t *testing.T) {
+func TestCase2(t *testing.T) {
 	db := test.InitDB()
 	err := InitTable(db)
 	require.NoError(t, err)
