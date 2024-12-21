@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"interview-cases/case21_30/case23/domain"
-	"interview-cases/case21_30/case23/repository"
+	"interview-cases/case21_30/case22/domain"
+	"interview-cases/case21_30/case22/repository"
 )
 
 type RankService interface {

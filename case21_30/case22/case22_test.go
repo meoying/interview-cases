@@ -1,16 +1,16 @@
-package case23
+package case22
 
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"interview-cases/case21_30/case23/cronjob"
-	"interview-cases/case21_30/case23/domain"
-	"interview-cases/case21_30/case23/repository"
-	"interview-cases/case21_30/case23/repository/cache/local"
-	"interview-cases/case21_30/case23/repository/cache/redis"
-	"interview-cases/case21_30/case23/service"
+	"interview-cases/case21_30/case22/cronjob"
+	"interview-cases/case21_30/case22/domain"
+	"interview-cases/case21_30/case22/repository"
+	"interview-cases/case21_30/case22/repository/cache/local"
+	"interview-cases/case21_30/case22/repository/cache/redis"
+	"interview-cases/case21_30/case22/service"
 	"interview-cases/test"
 	"log"
 	"sort"

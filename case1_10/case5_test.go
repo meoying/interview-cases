@@ -14,7 +14,9 @@
 
 package case1_10
 
-import "github.com/stretchr/testify/suite"
+import (
+	"github.com/stretchr/testify/suite"
+)
 
 type Case5TestSuite struct {
 	suite.Suite

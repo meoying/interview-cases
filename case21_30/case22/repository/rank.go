@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"interview-cases/case21_30/case23/domain"
-	"interview-cases/case21_30/case23/repository/cache/local"
-	"interview-cases/case21_30/case23/repository/cache/redis"
+	"interview-cases/case21_30/case22/domain"
+	"interview-cases/case21_30/case22/repository/cache/local"
+	"interview-cases/case21_30/case22/repository/cache/redis"
 )
 
 type RankRepo interface {
@@ -17,7 +17,7 @@ type rankRepo struct {
 	redisCache *redis.Cache
 }
 
-func NewRankRepo(localCache *local.Cache,redisCache *redis.Cache)RankRepo{
+func NewRankRepo(localCache *local.Cache, redisCache *redis.Cache) RankRepo {
 	return &rankRepo{
 		localCache: localCache,
 		redisCache: redisCache,
@@ -31,5 +31,5 @@ func (r *rankRepo) TopN(ctx context.Context) ([]domain.RankItem, error) {
 
 func (r *rankRepo) ReplaceTopN(ctx context.Context, item domain.RankItem) error {
 	// 设置缓存
-	return r.redisCache.Set(ctx,item)
+	return r.redisCache.Set(ctx, item)
 }

@@ -2,8 +2,8 @@ package cronjob
 
 import (
 	"context"
-	"interview-cases/case21_30/case23/repository/cache/local"
-	"interview-cases/case21_30/case23/repository/cache/redis"
+	"interview-cases/case21_30/case22/repository/cache/local"
+	"interview-cases/case21_30/case22/repository/cache/redis"
 	"log/slog"
 	"time"
 )

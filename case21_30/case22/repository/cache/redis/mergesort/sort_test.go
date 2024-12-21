@@ -2,7 +2,7 @@ package mergesort
 
 import (
 	"github.com/stretchr/testify/assert"
-	"interview-cases/case21_30/case23/domain"
+	"interview-cases/case21_30/case22/domain"
 	"testing"
 )
 

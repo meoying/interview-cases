@@ -2,7 +2,7 @@ package mergesort
 
 import (
 	"github.com/ecodeclub/ekit/queue"
-	"interview-cases/case21_30/case23/domain"
+	"interview-cases/case21_30/case22/domain"
 )
 
 type item struct {
