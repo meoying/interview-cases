@@ -2,8 +2,8 @@ package cronjob
 
 import (
 	"github.com/robfig/cron/v3"
-	"interview-cases/case21_30/case21/repository/cache/local"
-	"interview-cases/case21_30/case21/repository/cache/redis"
+	"interview-cases/case21_30/case22/repository/cache/local"
+	"interview-cases/case21_30/case22/repository/cache/redis"
 )
 
 func InitJob(articleSvc ArticleSvc, redisCache *redis.Cache, localCache *local.Cache) error {

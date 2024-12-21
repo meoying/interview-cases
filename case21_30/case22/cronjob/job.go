@@ -2,8 +2,8 @@ package cronjob
 
 import (
 	"context"
-	"interview-cases/case21_30/case21/repository/cache/local"
-	"interview-cases/case21_30/case21/repository/cache/redis"
+	"interview-cases/case21_30/case22/repository/cache/local"
+	"interview-cases/case21_30/case22/repository/cache/redis"
 	"log/slog"
 
 	"time"
@@ -11,15 +11,15 @@ import (
 
 // ToRedisJob 同步到redis
 type ToRedisJob struct {
-	redisCache *redis.Cache
-	articleSvc     ArticleSvc
+	redisCache       *redis.Cache
+	articleSvc       ArticleSvc
 	syncToRedisCount int
 }
 
-func NewDBToRedisJob(redisCache *redis.Cache, triSvc ArticleSvc,syncToRedisCount int) *ToRedisJob {
+func NewDBToRedisJob(redisCache *redis.Cache, triSvc ArticleSvc, syncToRedisCount int) *ToRedisJob {
 	return &ToRedisJob{
-		redisCache: redisCache,
-		articleSvc:     triSvc,
+		redisCache:       redisCache,
+		articleSvc:       triSvc,
 		syncToRedisCount: syncToRedisCount,
 	}
 }
@@ -48,13 +48,13 @@ type RedisToLocalJob struct {
 	redisCache *redis.Cache
 	localCache *local.Cache
 	// 从redis同步进本地缓存的个数，可以从配置文件获取
-	syncToLocalCount  int
+	syncToLocalCount int
 }
 
-func NewRedisToLocalJob(redisCache *redis.Cache, localCache *local.Cache,syncToLocalCount int) *RedisToLocalJob {
+func NewRedisToLocalJob(redisCache *redis.Cache, localCache *local.Cache, syncToLocalCount int) *RedisToLocalJob {
 	return &RedisToLocalJob{
-		redisCache: redisCache,
-		localCache: localCache,
+		redisCache:       redisCache,
+		localCache:       localCache,
 		syncToLocalCount: syncToLocalCount,
 	}
 }

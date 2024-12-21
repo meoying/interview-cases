@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/redis/go-redis/v9"
-	"interview-cases/case21_30/case21/domain"
+	"interview-cases/case21_30/case22/domain"
 	"strconv"
 )
 

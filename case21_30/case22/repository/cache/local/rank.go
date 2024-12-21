@@ -3,7 +3,7 @@ package local
 import (
 	"context"
 	"github.com/ecodeclub/ekit/syncx/atomicx"
-	"interview-cases/case21_30/case21/domain"
+	"interview-cases/case21_30/case22/domain"
 )
 
 type Cache struct {

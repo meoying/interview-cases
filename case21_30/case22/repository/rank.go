@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"interview-cases/case21_30/case21/domain"
-	"interview-cases/case21_30/case21/repository/cache/local"
-	"interview-cases/case21_30/case21/repository/cache/redis"
+	"interview-cases/case21_30/case22/domain"
+	"interview-cases/case21_30/case22/repository/cache/local"
+	"interview-cases/case21_30/case22/repository/cache/redis"
 )
 
 type RankRepository interface {

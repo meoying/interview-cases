@@ -3,8 +3,8 @@ package cronjob
 import (
 	"context"
 	"github.com/ecodeclub/ekit/slice"
-	"interview-cases/case21_30/case21/cronjob/dao"
-	"interview-cases/case21_30/case21/domain"
+	"interview-cases/case21_30/case22/cronjob/dao"
+	"interview-cases/case21_30/case22/domain"
 )
 
 type ArticleSvc interface {

@@ -2,10 +2,9 @@ package service
 
 import (
 	"context"
-	"interview-cases/case21_30/case21/domain"
-	"interview-cases/case21_30/case21/repository"
+	"interview-cases/case21_30/case22/domain"
+	"interview-cases/case21_30/case22/repository"
 )
-
 
 // 榜单服务
 type RankService interface {
@@ -15,10 +14,10 @@ type RankService interface {
 	Update(ctx context.Context, items []domain.Article) (err error)
 }
 
-
 type topSvc struct {
 	repo repository.RankRepository
 }
+
 func NewRankService(repo repository.RankRepository) RankService {
 	return &topSvc{
 		repo: repo,
@@ -30,5 +29,5 @@ func (t *topSvc) TopN(ctx context.Context) ([]domain.Article, error) {
 }
 
 func (t *topSvc) Update(ctx context.Context, item []domain.Article) (err error) {
-	return t.repo.ReplaceTopN(ctx,item)
+	return t.repo.ReplaceTopN(ctx, item)
 }
